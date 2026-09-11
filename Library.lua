@@ -357,13 +357,13 @@ local function SetupAutoScroll(scrollingFrame, textLabel)
 end
 
 local function UpdateScale(val)
-    Library.GlobalScale = val
-    if Library.ScaleObj then
-        Library.ScaleObj.Scale = val
-    end
-    if Library.ScaleWrapper then
-        Library.ScaleWrapper.Size = UDim2.new(1 / val, 0, 1 / val, -45 / val)
-    end
+	Library.GlobalScale = val
+	if Library.ScaleObj then
+		Library.ScaleObj.Scale = val
+	end
+	if Library.ScaleWrapper then
+		Library.ScaleWrapper.Size = UDim2.new(1 / val, 0, 1 / val, -60 / val) -- Изменено с -45 на -60
+	end
 end
 
 local function GetGradientSeq(theme)
@@ -1732,8 +1732,30 @@ function Library:CreateWindow(Settings)
 		TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
 	end)
 	Close.MouseButton1Click:Connect(function()
-		ScreenGui:Destroy()
+	ScreenGui:Destroy()
 	end)
+	
+	-- === НИЖНЯЯ ПОЛОСА ДЛЯ ПЕРЕТАСКИВАНИЯ ===
+	local BottomBar = Create("Frame", {
+		Parent = Main,
+		Size = UDim2.new(1, -25, 0, 15), -- Отступ 25px справа, чтобы не лезть на ResizeBtn
+		Position = UDim2.new(0, 0, 1, -15),
+		BackgroundColor3 = SelectedTheme.Main,
+		BackgroundTransparency = 0.2,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+		ThemeTag = "Main"
+	})
+	Create("Frame", {
+		Parent = BottomBar,
+		Size = UDim2.new(1, 0, 0, 1),
+		BackgroundColor3 = SelectedTheme.TextDark,
+		BackgroundTransparency = 0.8,
+		BorderSizePixel = 0,
+		ZIndex = 6,
+		ThemeTag = "TextDark"
+	})
+	MakeDraggable(BottomBar, WindowContainer)
 	
 	-- === ЛОГИКА СВЕРТЫВАНИЯ ===
 	local isMinimized = false
@@ -1746,6 +1768,7 @@ function Library:CreateWindow(Settings)
 			Shadow1.Visible = false
 			Shadow2.Visible = false
 			ResizeBtn.Visible = false
+			BottomBar.Visible = false
 			TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
 				Size = UDim2.fromOffset(originalWindowSize.X.Offset, 45)
 			}):Play()
@@ -1754,6 +1777,7 @@ function Library:CreateWindow(Settings)
 			Shadow1.Visible = true
 			Shadow2.Visible = true
 			ResizeBtn.Visible = true
+			BottomBar.Visible = true
 			TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
 				Size = originalWindowSize
 			}):Play()
@@ -1763,7 +1787,7 @@ function Library:CreateWindow(Settings)
 	Library.ScaleWrapper = Create("Frame", {
 		Name = "ScaleWrapper",
 		Parent = Main,
-		Size = UDim2.new(1 / Library.GlobalScale, 0, 1 / Library.GlobalScale, -45 / Library.GlobalScale),
+		Size = UDim2.new(1 / Library.GlobalScale, 0, 1 / Library.GlobalScale, -60 / Library.GlobalScale), -- Изменено с -45 на -60
 		Position = UDim2.new(0, 0, 0, 45),
 		BackgroundTransparency = 1,
 		ZIndex = 5
@@ -1876,6 +1900,7 @@ function Library:CreateWindow(Settings)
 				Shadow1.Visible = true
 				Shadow2.Visible = true
 				ResizeBtn.Visible = true
+				BottomBar.Visible = true -- Показываем нижнюю полосу
 				LastSize = originalWindowSize
 			end
 			TS:Create(WindowContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = LastSize}):Play()
