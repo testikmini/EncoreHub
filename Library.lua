@@ -1669,14 +1669,35 @@ function Library:CreateWindow(Settings)
         ThemeTag = "Text"
     })
     
+    local Minimize = Create("TextButton", {
+	Parent = TopBar,
+	Size = UDim2.new(0, 45, 1, 0),
+	Position = UDim2.new(1, -90, 0, 0),
+	BackgroundTransparency = 1,
+	Text = "",
+	ZIndex = 6
+    })
+    local MinusLine = Create("Frame", {
+        Parent = Minimize,
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, 12, 0, 2),
+        BackgroundColor3 = SelectedTheme.Text,
+        ZIndex = 6,
+        ThemeTag = "Text"
+    })
+    AddCorner(MinusLine, 2)
+    Minimize.MouseEnter:Connect(function()
+        TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Accent}):Play()
+    end)
+    Minimize.MouseLeave:Connect(function()
+        TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
+    end)
+
     local Close = Create("TextButton", {
         Parent = TopBar,
         Size = UDim2.new(0, 45, 1, 0),
         Position = UDim2.new(1, -45, 0, 0),
-        BackgroundTransparency = 1,
-        Text = "",
-        ZIndex = 6
-    })
     
     local Cross1 = Create("Frame", {
         Parent = Close,
@@ -1711,7 +1732,31 @@ function Library:CreateWindow(Settings)
         TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play() 
     end)
     Close.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
+	ScreenGui:Destroy()
+    end)
+
+    local isMinimized = false
+    local originalWindowSize = WindowSize
+
+    Minimize.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        if isMinimized then
+            Library.ScaleWrapper.Visible = false
+            Shadow1.Visible = false
+            Shadow2.Visible = false
+            ResizeBtn.Visible = false
+            TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2.fromOffset(originalWindowSize.X.Offset, 45)
+            }):Play()
+        else
+            Library.ScaleWrapper.Visible = true
+            Shadow1.Visible = true
+            Shadow2.Visible = true
+            ResizeBtn.Visible = true
+            TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = originalWindowSize
+            }):Play()
+        end
     end)
 
     Library.ScaleWrapper = Create("Frame", {
@@ -1825,15 +1870,22 @@ function Library:CreateWindow(Settings)
     })
 
     local IsOpen, LastSize = true, WindowSize
-    
     local function ToggleUI()
-        IsOpen = not IsOpen 
-        if IsOpen then 
-            WindowContainer.Visible = true 
-            TS:Create(WindowContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = LastSize}):Play() 
+        IsOpen = not IsOpen
+        if IsOpen then
+            WindowContainer.Visible = true
+            if isMinimized then
+                isMinimized = false
+                Library.ScaleWrapper.Visible = true
+                Shadow1.Visible = true
+                Shadow2.Visible = true
+                ResizeBtn.Visible = true
+                LastSize = originalWindowSize
+            end
+            TS:Create(WindowContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = LastSize}):Play()
             TS:Create(Shadow1, TweenInfo.new(0.6), {ImageTransparency = 0.35}):Play()
             TS:Create(Shadow2, TweenInfo.new(0.6), {ImageTransparency = 0.4}):Play()
-        else 
+        else
             LastSize = WindowContainer.Size 
             local close = TS:Create(WindowContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
             close:Play() 
