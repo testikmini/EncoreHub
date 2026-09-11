@@ -1624,280 +1624,276 @@ function Library:CreateWindow(Settings)
     MakeResizable(ResizeBtn, WindowContainer)
 
     local TopBar = Create("Frame", {
-        Parent = Main,
-        Size = UDim2.new(1, 0, 0, 45),
-        BackgroundTransparency = 1,
-        ZIndex = 5
-    })
-    MakeDraggable(TopBar, WindowContainer)
-    
-    Create("Frame", {
-        Parent = TopBar,
-        Size = UDim2.new(1, 0, 0, 1),
-        Position = UDim2.new(0, 0, 1, 0),
-        BackgroundColor3 = SelectedTheme.TextDark,
-        BackgroundTransparency = 0.8,
-        BorderSizePixel = 0,
-        ZIndex = 6,
-        ThemeTag = "TextDark"
-    })
-    
-    local TitleOffsetX = 18
-    if CustomIconID and CustomIconID ~= "" then
-        TitleOffsetX = 48
-        local TopIcon = Create("ImageLabel", {
-            Parent = TopBar,
-            Size = UDim2.new(0, 26, 0, 26),
-            Position = UDim2.new(0, 16, 0.5, -13),
-            BackgroundTransparency = 1,
-            ZIndex = 6
-        })
-        SetImageAsync(TopIcon, "Image", CustomIconID)
-    end
-
-    Create("TextLabel", {
-        Parent = TopBar,
-        Size = UDim2.new(1, -40, 1, 0),
-        Position = UDim2.new(0, TitleOffsetX, 0, 0),
-        BackgroundTransparency = 1,
-        Text = Title,
-        Font = Library.GlobalFontBold,
-        TextColor3 = SelectedTheme.Text,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 6,
-        ThemeTag = "Text"
-    })
-    
-    local Minimize = Create("TextButton", {
-	Parent = TopBar,
-	Size = UDim2.new(0, 45, 1, 0),
-	Position = UDim2.new(1, -90, 0, 0),
+	Parent = Main,
+	Size = UDim2.new(1, 0, 0, 45),
 	BackgroundTransparency = 1,
-	Text = "",
-	ZIndex = 6
-    })
-    local MinusLine = Create("Frame", {
-        Parent = Minimize,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 12, 0, 2),
-        BackgroundColor3 = SelectedTheme.Text,
-        ZIndex = 6,
-        ThemeTag = "Text"
-    })
-    AddCorner(MinusLine, 2)
-    Minimize.MouseEnter:Connect(function()
-        TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Accent}):Play()
-    end)
-    Minimize.MouseLeave:Connect(function()
-        TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
-    end)
-
-    local Close = Create("TextButton", {
-        Parent = TopBar,
-        Size = UDim2.new(0, 45, 1, 0),
-        Position = UDim2.new(1, -45, 0, 0),
-    
-    local Cross1 = Create("Frame", {
-        Parent = Close,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 12, 0, 2),
-        BackgroundColor3 = SelectedTheme.Text,
-        Rotation = 45,
-        ZIndex = 6,
-        ThemeTag = "Text"
-    })
-    AddCorner(Cross1, 2)
-    
-    local Cross2 = Create("Frame", {
-        Parent = Close,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 12, 0, 2),
-        BackgroundColor3 = SelectedTheme.Text,
-        Rotation = -45,
-        ZIndex = 6,
-        ThemeTag = "Text"
-    })
-    AddCorner(Cross2, 2)
-    
-    Close.MouseEnter:Connect(function() 
-        TS:Create(Cross1, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Error}):Play() 
-        TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Error}):Play() 
-    end)
-    Close.MouseLeave:Connect(function() 
-        TS:Create(Cross1, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play() 
-        TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play() 
-    end)
-    Close.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
-    end)
-
-    local isMinimized = false
-    local originalWindowSize = WindowSize
-
-    Minimize.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        if isMinimized then
-            Library.ScaleWrapper.Visible = false
-            Shadow1.Visible = false
-            Shadow2.Visible = false
-            ResizeBtn.Visible = false
-            TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Size = UDim2.fromOffset(originalWindowSize.X.Offset, 45)
-            }):Play()
-        else
-            Library.ScaleWrapper.Visible = true
-            Shadow1.Visible = true
-            Shadow2.Visible = true
-            ResizeBtn.Visible = true
-            TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = originalWindowSize
-            }):Play()
-        end
-    end)
-
-    Library.ScaleWrapper = Create("Frame", {
-        Name = "ScaleWrapper",
-        Parent = Main,
-        Size = UDim2.new(1 / Library.GlobalScale, 0, 1 / Library.GlobalScale, -45 / Library.GlobalScale),
-        Position = UDim2.new(0, 0, 0, 45),
-        BackgroundTransparency = 1,
-        ZIndex = 5
-    })
-    
-    Library.ScaleObj = Create("UIScale", {
-        Parent = Library.ScaleWrapper,
-        Scale = Library.GlobalScale
-    })
-
-    local TabContainer = Create("ScrollingFrame", {
-        Parent = Library.ScaleWrapper,
-        Size = UDim2.new(0.22, 0, 1, -78),
-        Position = UDim2.new(0.02, 0, 0, 15),
-        BackgroundColor3 = SelectedTheme.Second,
-        BackgroundTransparency = 0.5,
-        ScrollBarThickness = 0,
-        BorderSizePixel = 0,
-        ZIndex = 5,
-        ThemeTag = "Second",
-        CanvasSize = UDim2.new(0, 0, 0, 0),
-        AutomaticCanvasSize = Enum.AutomaticSize.Y
-    })
-    AddCorner(TabContainer, 8)
-
-    local TabContainerStroke = AddStroke(TabContainer, SelectedTheme)
-    TabContainerStroke.Transparency = 0.8
-    Create("UIListLayout", {
-        Parent = TabContainer,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 6)
-    })
-    Create("UIPadding", {
-        Parent = TabContainer,
-        PaddingTop = UDim.new(0, 8),
-        PaddingBottom = UDim.new(0, 8),
-        PaddingLeft = UDim.new(0, 6),
-        PaddingRight = UDim.new(0, 6)
-    })
-
-    local ProfileFrame = Create("Frame", {
-        Parent = Library.ScaleWrapper,
-        Size = UDim2.new(0.22, 0, 0, 40),
-        Position = UDim2.new(0.02, 0, 1, -55),
-        BackgroundColor3 = SelectedTheme.Second,
-        BackgroundTransparency = 0.5,
-        BorderSizePixel = 0,
-        ZIndex = 5,
-        ThemeTag = "Second"
-    })
-    AddCorner(ProfileFrame, 8)
-    AddStroke(ProfileFrame, SelectedTheme).Transparency = 0.8
-
-    local AvatarImg = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-    pcall(function()
-        AvatarImg = Plrs:GetUserThumbnailAsync(LP.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-    end)
-    
-    local Avatar = Create("ImageLabel", {
-        Parent = ProfileFrame,
-        Size = UDim2.new(0, 28, 0, 28),
-        Position = UDim2.new(0, 6, 0.5, -14),
-        BackgroundTransparency = 1,
-        Image = AvatarImg,
-        ZIndex = 6
-    })
-    AddCorner(Avatar, 100)
-    
-    Create("TextLabel", {
-        Parent = ProfileFrame,
-        Size = UDim2.new(1, -45, 0, 16),
-        Position = UDim2.new(0, 40, 0, 5),
-        BackgroundTransparency = 1,
-        Text = LP.DisplayName,
-        Font = Library.GlobalFontBold,
-        TextColor3 = SelectedTheme.Text,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 6,
-        TextTruncate = Enum.TextTruncate.AtEnd,
-        ThemeTag = "Text"
-    })
-    Create("TextLabel", {
-        Parent = ProfileFrame,
-        Size = UDim2.new(1, -45, 0, 14),
-        Position = UDim2.new(0, 40, 0, 20),
-        BackgroundTransparency = 1,
-        Text = "@" .. LP.Name,
-        Font = Library.GlobalFont,
-        TextColor3 = SelectedTheme.TextDark,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        ZIndex = 6,
-        TextTruncate = Enum.TextTruncate.AtEnd,
-        ThemeTag = "TextDark"
-    })
-
-    local PageContainer = Create("Frame", {
-        Parent = Library.ScaleWrapper,
-        Size = UDim2.new(0.72, 0, 1, -30),
-        Position = UDim2.new(0.26, 0, 0, 15),
-        BackgroundTransparency = 1,
-        ZIndex = 5,
-        ClipsDescendants = true
-    })
-
-    local IsOpen, LastSize = true, WindowSize
-    local function ToggleUI()
-        IsOpen = not IsOpen
-        if IsOpen then
-            WindowContainer.Visible = true
-            if isMinimized then
-                isMinimized = false
-                Library.ScaleWrapper.Visible = true
-                Shadow1.Visible = true
-                Shadow2.Visible = true
-                ResizeBtn.Visible = true
-                LastSize = originalWindowSize
-            end
-            TS:Create(WindowContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = LastSize}):Play()
-            TS:Create(Shadow1, TweenInfo.new(0.6), {ImageTransparency = 0.35}):Play()
-            TS:Create(Shadow2, TweenInfo.new(0.6), {ImageTransparency = 0.4}):Play()
-        else
-            LastSize = WindowContainer.Size 
-            local close = TS:Create(WindowContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
-            close:Play() 
-            TS:Create(Shadow1, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
-            TS:Create(Shadow2, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
-            close.Completed:Connect(function()
-                if not IsOpen then
-                    WindowContainer.Visible = false
-                end
-            end) 
-        end
-    end
+	ZIndex = 5
+	})
+	MakeDraggable(TopBar, WindowContainer)
+	Create("Frame", {
+		Parent = TopBar,
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 1, 0),
+		BackgroundColor3 = SelectedTheme.TextDark,
+		BackgroundTransparency = 0.8,
+		BorderSizePixel = 0,
+		ZIndex = 6,
+		ThemeTag = "TextDark"
+	})
+	local TitleOffsetX = 18
+	if CustomIconID and CustomIconID ~= "" then
+		TitleOffsetX = 48
+		local TopIcon = Create("ImageLabel", {
+			Parent = TopBar,
+			Size = UDim2.new(0, 26, 0, 26),
+			Position = UDim2.new(0, 16, 0.5, -13),
+			BackgroundTransparency = 1,
+			ZIndex = 6
+		})
+		SetImageAsync(TopIcon, "Image", CustomIconID)
+	end
+	Create("TextLabel", {
+		Parent = TopBar,
+		Size = UDim2.new(1, -90, 1, 0), -- Изменено с -40 на -90, чтобы текст не лез на 2 кнопки
+		Position = UDim2.new(0, TitleOffsetX, 0, 0),
+		BackgroundTransparency = 1,
+		Text = Title,
+		Font = Library.GlobalFontBold,
+		TextColor3 = SelectedTheme.Text,
+		TextSize = 16,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 6,
+		ThemeTag = "Text"
+	})
+	
+	-- === КНОПКА СВЕРТЫВАНИЯ (-) ===
+	local Minimize = Create("TextButton", {
+		Parent = TopBar,
+		Size = UDim2.new(0, 45, 1, 0),
+		Position = UDim2.new(1, -90, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		ZIndex = 6
+	})
+	local MinusLine = Create("Frame", {
+		Parent = Minimize,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0, 12, 0, 2),
+		BackgroundColor3 = SelectedTheme.Text,
+		ZIndex = 6,
+		ThemeTag = "Text"
+	})
+	AddCorner(MinusLine, 2)
+	Minimize.MouseEnter:Connect(function()
+		TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Accent}):Play()
+	end)
+	Minimize.MouseLeave:Connect(function()
+		TS:Create(MinusLine, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
+	end)
+	
+	-- === КНОПКА ЗАКРЫТИЯ (X) ===
+	local Close = Create("TextButton", {
+		Parent = TopBar,
+		Size = UDim2.new(0, 45, 1, 0),
+		Position = UDim2.new(1, -45, 0, 0),
+		BackgroundTransparency = 1,
+		Text = "",
+		ZIndex = 6
+	})
+	local Cross1 = Create("Frame", {
+		Parent = Close,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0, 12, 0, 2),
+		BackgroundColor3 = SelectedTheme.Text,
+		Rotation = 45,
+		ZIndex = 6,
+		ThemeTag = "Text"
+	})
+	AddCorner(Cross1, 2)
+	local Cross2 = Create("Frame", {
+		Parent = Close,
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		Size = UDim2.new(0, 12, 0, 2),
+		BackgroundColor3 = SelectedTheme.Text,
+		Rotation = -45,
+		ZIndex = 6,
+		ThemeTag = "Text"
+	})
+	AddCorner(Cross2, 2)
+	Close.MouseEnter:Connect(function()
+		TS:Create(Cross1, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Error}):Play()
+		TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Error}):Play()
+	end)
+	Close.MouseLeave:Connect(function()
+		TS:Create(Cross1, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
+		TS:Create(Cross2, TweenInfo.new(0.2), {BackgroundColor3 = SelectedTheme.Text}):Play()
+	end)
+	Close.MouseButton1Click:Connect(function()
+		ScreenGui:Destroy()
+	end)
+	
+	-- === ЛОГИКА СВЕРТЫВАНИЯ ===
+	local isMinimized = false
+	local originalWindowSize = WindowSize
+	
+	Minimize.MouseButton1Click:Connect(function()
+		isMinimized = not isMinimized
+		if isMinimized then
+			Library.ScaleWrapper.Visible = false
+			Shadow1.Visible = false
+			Shadow2.Visible = false
+			ResizeBtn.Visible = false
+			TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+				Size = UDim2.fromOffset(originalWindowSize.X.Offset, 45)
+			}):Play()
+		else
+			Library.ScaleWrapper.Visible = true
+			Shadow1.Visible = true
+			Shadow2.Visible = true
+			ResizeBtn.Visible = true
+			TS:Create(WindowContainer, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = originalWindowSize
+			}):Play()
+		end
+	end)
+	
+	Library.ScaleWrapper = Create("Frame", {
+		Name = "ScaleWrapper",
+		Parent = Main,
+		Size = UDim2.new(1 / Library.GlobalScale, 0, 1 / Library.GlobalScale, -45 / Library.GlobalScale),
+		Position = UDim2.new(0, 0, 0, 45),
+		BackgroundTransparency = 1,
+		ZIndex = 5
+	})
+	Library.ScaleObj = Create("UIScale", {
+		Parent = Library.ScaleWrapper,
+		Scale = Library.GlobalScale
+	})
+	
+	local TabContainer = Create("ScrollingFrame", {
+		Parent = Library.ScaleWrapper,
+		Size = UDim2.new(0.22, 0, 1, -78),
+		Position = UDim2.new(0.02, 0, 0, 15),
+		BackgroundColor3 = SelectedTheme.Second,
+		BackgroundTransparency = 0.5,
+		ScrollBarThickness = 0,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+		ThemeTag = "Second",
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		AutomaticCanvasSize = Enum.AutomaticSize.Y
+	})
+	AddCorner(TabContainer, 8)
+	local TabContainerStroke = AddStroke(TabContainer, SelectedTheme)
+	TabContainerStroke.Transparency = 0.8
+	Create("UIListLayout", {
+		Parent = TabContainer,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 6)
+	})
+	Create("UIPadding", {
+		Parent = TabContainer,
+		PaddingTop = UDim.new(0, 8),
+		PaddingBottom = UDim.new(0, 8),
+		PaddingLeft = UDim.new(0, 6),
+		PaddingRight = UDim.new(0, 6)
+	})
+	
+	local ProfileFrame = Create("Frame", {
+		Parent = Library.ScaleWrapper,
+		Size = UDim2.new(0.22, 0, 0, 40),
+		Position = UDim2.new(0.02, 0, 1, -55),
+		BackgroundColor3 = SelectedTheme.Second,
+		BackgroundTransparency = 0.5,
+		BorderSizePixel = 0,
+		ZIndex = 5,
+		ThemeTag = "Second"
+	})
+	AddCorner(ProfileFrame, 8)
+	AddStroke(ProfileFrame, SelectedTheme).Transparency = 0.8
+	local AvatarImg = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+	pcall(function()
+		AvatarImg = Plrs:GetUserThumbnailAsync(LP.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+	end)
+	local Avatar = Create("ImageLabel", {
+		Parent = ProfileFrame,
+		Size = UDim2.new(0, 28, 0, 28),
+		Position = UDim2.new(0, 6, 0.5, -14),
+		BackgroundTransparency = 1,
+		Image = AvatarImg,
+		ZIndex = 6
+	})
+	AddCorner(Avatar, 100)
+	Create("TextLabel", {
+		Parent = ProfileFrame,
+		Size = UDim2.new(1, -45, 0, 16),
+		Position = UDim2.new(0, 40, 0, 5),
+		BackgroundTransparency = 1,
+		Text = LP.DisplayName,
+		Font = Library.GlobalFontBold,
+		TextColor3 = SelectedTheme.Text,
+		TextSize = 13,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 6,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		ThemeTag = "Text"
+	})
+	Create("TextLabel", {
+		Parent = ProfileFrame,
+		Size = UDim2.new(1, -45, 0, 14),
+		Position = UDim2.new(0, 40, 0, 20),
+		BackgroundTransparency = 1,
+		Text = "@" .. LP.Name,
+		Font = Library.GlobalFont,
+		TextColor3 = SelectedTheme.TextDark,
+		TextSize = 11,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 6,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		ThemeTag = "TextDark"
+	})
+	
+	local PageContainer = Create("Frame", {
+		Parent = Library.ScaleWrapper,
+		Size = UDim2.new(0.72, 0, 1, -30),
+		Position = UDim2.new(0.26, 0, 0, 15),
+		BackgroundTransparency = 1,
+		ZIndex = 5,
+		ClipsDescendants = true
+	})
+	
+	local IsOpen, LastSize = true, WindowSize
+	local function ToggleUI()
+		IsOpen = not IsOpen
+		if IsOpen then
+			WindowContainer.Visible = true
+			if isMinimized then
+				isMinimized = false
+				Library.ScaleWrapper.Visible = true
+				Shadow1.Visible = true
+				Shadow2.Visible = true
+				ResizeBtn.Visible = true
+				LastSize = originalWindowSize
+			end
+			TS:Create(WindowContainer, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = LastSize}):Play()
+			TS:Create(Shadow1, TweenInfo.new(0.6), {ImageTransparency = 0.35}):Play()
+			TS:Create(Shadow2, TweenInfo.new(0.6), {ImageTransparency = 0.4}):Play()
+		else
+			LastSize = WindowContainer.Size
+			local close = TS:Create(WindowContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+			close:Play()
+			TS:Create(Shadow1, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
+			TS:Create(Shadow2, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {ImageTransparency = 1}):Play()
+			close.Completed:Connect(function()
+				if not IsOpen then
+					WindowContainer.Visible = false
+				end
+			end)
+		end
+	end
 
     if UIS.TouchEnabled then
         local MobileBtn = Create("ImageButton", {
