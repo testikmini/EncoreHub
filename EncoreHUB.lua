@@ -10404,173 +10404,194 @@ do
 end
 
 -- =========================================================================
--- BLITZ-STYLE SILENT AIM (CRASH-PROOF & UI FIXED)
+-- FTAP SILENT HEAD GRAB
 -- =========================================================================
 do
     local Players = game:GetService("Players")
     local UIS = game:GetService("UserInputService")
-    local RS = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
     local LP = Players.LocalPlayer
-    local Camera = workspace.CurrentCamera
 
-    -- Настройки
     local SilentAimEnabled = false
-    local TriggerbotEnabled = false
-    local FOV_Circle = 120 
     local MaxDist = 150
-    local TargetPartName = "Head" 
-    local lastClickTime = 0
+    local LockedHead = nil
+    local LeftMouseDown = false
+    local GrabSentThisPress = false
+    local SendingSilentGrab = false
+    local GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
+    local SetNetworkOwnerRemote = GrabEvents and GrabEvents:FindFirstChild("SetNetworkOwner")
+    local CreateGrabLineRemote = GrabEvents and GrabEvents:FindFirstChild("CreateGrabLine")
+    local DestroyGrabLineRemote = GrabEvents and GrabEvents:FindFirstChild("DestroyGrabLine")
 
-    -- =====================================================================
-    -- 1. ПОИСК ЦЕЛИ (FOV & DISTANCE CHECK)
-    -- =====================================================================
-    local function getSilentTarget()
-        local bestTarget = nil
-        local bestDist = math.huge
-        local myHRP = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-        if not myHRP then return nil end
-
-        for _, plr in ipairs(Players:GetPlayers()) do
-            if plr ~= LP and plr.Character then
-                local tPart = plr.Character:FindFirstChild(TargetPartName) or plr.Character:FindFirstChild("HumanoidRootPart")
-                if tPart then
-                    local dist = (tPart.Position - myHRP.Position).Magnitude
-                    if dist <= MaxDist then
-                        local screenPos, onScreen = Camera:WorldToScreenPoint(tPart.Position)
-                        if onScreen then
-                            local mousePos = UIS:GetMouseLocation()
-                            local dx = screenPos.X - mousePos.X
-                            local dy = screenPos.Y - mousePos.Y
-                            local distanceToCrosshair = math.sqrt(dx*dx + dy*dy)
-                            
-                            if distanceToCrosshair <= FOV_Circle and distanceToCrosshair < bestDist then
-                                bestDist = distanceToCrosshair
-                                bestTarget = tPart
-                            end
-                        end
-                    end
-                end
-            end
+    local function getGrabRemotes()
+        if not (GrabEvents and GrabEvents.Parent) then
+            GrabEvents = ReplicatedStorage:FindFirstChild("GrabEvents")
         end
-        return bestTarget
+        if not GrabEvents then return nil, nil, nil end
+
+        SetNetworkOwnerRemote = SetNetworkOwnerRemote or GrabEvents:FindFirstChild("SetNetworkOwner")
+        CreateGrabLineRemote = CreateGrabLineRemote or GrabEvents:FindFirstChild("CreateGrabLine")
+        DestroyGrabLineRemote = DestroyGrabLineRemote or GrabEvents:FindFirstChild("DestroyGrabLine")
+        return SetNetworkOwnerRemote, CreateGrabLineRemote, DestroyGrabLineRemote
     end
 
-    -- =====================================================================
-    -- 2. RAYCAST HOOK (ОБМАН КЛИЕНТА)
-    -- =====================================================================
-    pcall(function()
-        local oldRaycast = workspace.Raycast
-        workspace.Raycast = function(self, origin, direction, params)
-            local result = oldRaycast(self, origin, direction, params)
-            
-            if SilentAimEnabled then
-                local target = getSilentTarget()
-                if target then
-                    local dirToTarget = (target.Position - origin).Unit
-                    local dot = direction.Unit:Dot(dirToTarget)
-                    
-                    if dot > 0.7 then 
-                        return {
-                            Instance = target,
-                            Position = target.Position,
-                            Distance = (target.Position - origin).Magnitude,
-                            Material = Enum.Material.Plastic,
-                            Normal = direction.Unit
-                        }
-                    end
-                end
-            end
-            return result
+    local function isValidHead(head)
+        if not (head and head:IsA("BasePart") and head:IsDescendantOf(workspace)) then
+            return false
         end
-    end)
 
-    -- =====================================================================
-    -- 3. NAMECALL HOOK (ОБМАН СЕРВЕРА)
-    -- =====================================================================
-    pcall(function()
-        if hookmetamethod then
-            local oldNamecall
-            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-                local method = getnamecallmethod()
-                local args = {...}
-                
-                if method == "FireServer" and SilentAimEnabled then
-                    local target = getSilentTarget()
-                    if target then
-                        if self.Name == "SetNetworkOwner" then
-                            if type(args[2]) == "CFrame" then
-                                args[2] = target.CFrame 
-                            end
-                        elseif self.Name == "CreateGrabLine" then
-                            if type(args[3]) == "Vector3" then
-                                args[3] = target.Position 
-                            end
-                        end
-                    end
-                end
-                return oldNamecall(self, unpack(args))
-            end)
-        end
-    end)
+        local character = head.Parent
+        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+        return humanoid ~= nil and humanoid.Health > 0
+    end
 
-    -- =====================================================================
-    -- 4. TRIGGERBOT (АВТО-КЛИК)
-    -- =====================================================================
-    RS.Heartbeat:Connect(function()
-        if TriggerbotEnabled and SilentAimEnabled then
-            local target = getSilentTarget()
-            if target and not workspace:FindFirstChild("GrabParts") then
-                if tick() - lastClickTime > 0.5 then
-                    lastClickTime = tick()
-                    if mouse1click then
-                        pcall(mouse1click)
+    -- Silent aim здесь намеренно не зависит от камеры, crosshair или FOV.
+    -- Целью становится голова ближайшего живого игрока в пределах MaxDist.
+    local function getClosestHead()
+        local myCharacter = LP.Character
+        local myRoot = myCharacter and myCharacter:FindFirstChild("HumanoidRootPart")
+        if not myRoot then return nil end
+
+        local closestHead = nil
+        local closestDistance = math.huge
+
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LP then
+                local character = player.Character
+                local head = character and character:FindFirstChild("Head")
+
+                if isValidHead(head) then
+                    local distance = (head.Position - myRoot.Position).Magnitude
+                    if distance <= MaxDist and distance < closestDistance then
+                        closestDistance = distance
+                        closestHead = head
                     end
                 end
             end
         end
+
+        return closestHead
+    end
+
+    local function getLockedHead()
+        if not isValidHead(LockedHead) then
+            LockedHead = getClosestHead()
+        end
+        return LockedHead
+    end
+
+    -- Отправляем тот же набор remote-вызовов, который FTAP использует для
+    -- grab line, но подставляем Head независимо от того, куда смотрит камера.
+    local function fireSilentGrab()
+        local targetHead = getLockedHead()
+        local setNetworkOwner, createGrabLine = getGrabRemotes()
+        if not (targetHead and setNetworkOwner and createGrabLine) then return end
+
+        SendingSilentGrab = true
+        local sent = pcall(function()
+            setNetworkOwner:FireServer(targetHead, targetHead.CFrame)
+            createGrabLine:FireServer(targetHead, Vector3.zero, targetHead.Position, false)
+        end)
+        SendingSilentGrab = false
+        GrabSentThisPress = GrabSentThisPress or sent
+    end
+
+    -- После InputBegan штатный LocalScript FTAP тоже может вызвать эти remotes.
+    -- Меняем и деталь, и позицию, а повторный CreateGrabLine подавляем: именно
+    -- первый аргумент определяет, к какой части прикрепится линия.
+    pcall(function()
+        if not (hookmetamethod and getnamecallmethod) then return end
+
+        local wrap = newcclosure or function(callback) return callback end
+        local oldNamecall
+        oldNamecall = hookmetamethod(game, "__namecall", wrap(function(self, ...)
+            local method = getnamecallmethod()
+            local args = {...}
+
+            -- Внутри __namecall нельзя вызывать Roblox-методы: это рекурсивно
+            -- запустит тот же hook. Используем только заранее сохранённые ссылки.
+            if method == "FireServer" and SilentAimEnabled and LeftMouseDown and LockedHead then
+                if self == SetNetworkOwnerRemote then
+                    args[1] = LockedHead
+                    args[2] = LockedHead.CFrame
+                elseif self == CreateGrabLineRemote then
+                    if GrabSentThisPress and not SendingSilentGrab then
+                        return nil
+                    end
+
+                    args[1] = LockedHead
+                    args[2] = Vector3.zero
+                    args[3] = LockedHead.Position
+                    args[4] = false
+                    GrabSentThisPress = true
+                end
+            end
+
+            return oldNamecall(self, unpack(args))
+        end))
     end)
 
-    -- =====================================================================
-    -- 5. UI ИНТЕГРАЦИЯ (ВКЛАДКА TARGET)
-    -- =====================================================================
-    -- Создаем блок в правой части вкладки Target, чтобы ты точно его увидел
-    local AimBlock = Tabs.Target:CreateBlock({Name = "BlitZ Silent Aim", Side = "Right"})
+    UIS.InputBegan:Connect(function(input, gameProcessed)
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+
+        LeftMouseDown = true
+        GrabSentThisPress = false
+        if gameProcessed or not SilentAimEnabled then return end
+
+        LockedHead = getClosestHead()
+        if LockedHead and not GrabSentThisPress then
+            fireSilentGrab()
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+
+        local releasedHead = LockedHead
+        LeftMouseDown = false
+        LockedHead = nil
+        GrabSentThisPress = false
+
+        if SilentAimEnabled and isValidHead(releasedHead) then
+            local _, _, destroyGrabLine = getGrabRemotes()
+            if destroyGrabLine then
+                pcall(function()
+                    destroyGrabLine:FireServer(releasedHead)
+                end)
+            end
+        end
+    end)
+
+    local AimBlock = Tabs.Target:CreateBlock({Name = "FTAP Silent Head Grab", Side = "Right"})
 
     AimBlock:CreateToggle({
-        Name = "Enable Silent Aim",
+        Name = "Enable Silent Head Grab",
         Flag = "BlitZ_SilentAim",
         Default = false,
         Callback = function(Value)
+            local releasedHead = LockedHead
             SilentAimEnabled = Value
+            LockedHead = nil
+            GrabSentThisPress = false
+
             if Value then
-                notify("Silent Aim", "BlitZ Hook Active! Locks Head.", 3)
+                notify("Silent Aim", "LMB grabs the nearest player's Head without moving the camera.", 4)
+            else
+                if isValidHead(releasedHead) then
+                    local _, _, destroyGrabLine = getGrabRemotes()
+                    if destroyGrabLine then
+                        pcall(function()
+                            destroyGrabLine:FireServer(releasedHead)
+                        end)
+                    end
+                end
+                notify("Silent Aim", "Disabled.", 2)
             end
         end
     })
 
-    AimBlock:CreateToggle({
-        Name = "Triggerbot (Auto Click)",
-        Flag = "BlitZ_Triggerbot",
-        Default = false,
-        Callback = function(Value)
-            TriggerbotEnabled = Value
-        end
-    })
-
     AimBlock:CreateSlider({
-        Name = "FOV Radius (Pixels)",
-        Flag = "BlitZ_FOV",
-        Min = 50,
-        Max = 500,
-        Default = 120,
-        Rounding = 0,
-        Callback = function(Value)
-            FOV_Circle = Value
-        end
-    })
-
-    AimBlock:CreateSlider({
-        Name = "Max Distance",
+        Name = "Max Target Distance",
         Flag = "BlitZ_Dist",
         Min = 20,
         Max = 300,
@@ -10578,16 +10599,7 @@ do
         Rounding = 0,
         Callback = function(Value)
             MaxDist = Value
-        end
-    })
-
-    AimBlock:CreateDropdown({
-        Name = "Target Part",
-        Flag = "BlitZ_TargetPart",
-        Items = {"Head", "HumanoidRootPart"},
-        Default = "Head",
-        Callback = function(Value)
-            TargetPartName = Value
+            LockedHead = nil
         end
     })
 end
