@@ -1371,7 +1371,7 @@ function OrionLib:MakeWindow(WindowConfig)
         ColorSequenceKeypoint.new(0.25, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
         ColorSequenceKeypoint.new(0.50, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
         ColorSequenceKeypoint.new(0.75, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(20, 20, 20))       -- Снова темный (плавно замыкает круг)
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(20, 20, 20)),       -- Снова темный (плавно замыкает круг)
 		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
         ColorSequenceKeypoint.new(0.50, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
         ColorSequenceKeypoint.new(0.75, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый
