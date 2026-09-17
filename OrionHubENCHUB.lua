@@ -1366,16 +1366,13 @@ function OrionLib:MakeWindow(WindowConfig)
 	})
 	]]--
 
-    mainWindowGradient.Color = ColorSequence.new({ --- BY ENCORE HUB
-        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(20, 20, 20)),      -- Темный (почти черный)
-        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
-        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
-        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый
-        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(20, 20, 20)),       -- Снова темный (плавно замыкает круг)
-		ColorSequenceKeypoint.new(0.25, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
-        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
-        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый
-    })
+    mainWindowGradient.Color = ColorSequence.new({
+	ColorSequenceKeypoint.new(0.00, Color3.fromRGB(20, 20, 20)),      -- Темный (почти черный)
+	ColorSequenceKeypoint.new(0.25, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
+	ColorSequenceKeypoint.new(0.50, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
+	ColorSequenceKeypoint.new(0.75, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый
+	ColorSequenceKeypoint.new(1.00, Color3.fromRGB(20, 20, 20))       -- Снова темный (плавно замыкает круг)
+	})
 	--[[mainWindowGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
 		--ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),   -- Vermelho
