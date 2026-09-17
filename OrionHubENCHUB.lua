@@ -1366,7 +1366,7 @@ function OrionLib:MakeWindow(WindowConfig)
 	})
 	]]--
 
-    mainWindowGradient.Color = ColorSequence.new({
+    mainWindowGradient.Color = ColorSequence.new({ --- BY ENCORE HUB
         ColorSequenceKeypoint.new(0.00, Color3.fromRGB(20, 20, 20)),      -- Темный (почти черный)
         ColorSequenceKeypoint.new(0.25, Color3.fromRGB(75, 0, 130)),      -- Темно-фиолетовый (Indigo)
         ColorSequenceKeypoint.new(0.50, Color3.fromRGB(138, 43, 226)),    -- Яркий фиолетовый (пик свечения)
